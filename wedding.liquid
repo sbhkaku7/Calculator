@@ -7,13 +7,20 @@
   data-wedding-date="{{ section.settings.wedding_date | escape }}"
   data-location-label="{{ section.settings.location_label | escape }}"
   data-location-url="{{ section.settings.location_url | escape }}"
+  data-inviter-name="{{ section.settings.inviter_name | escape }}"
 >
+  <div class="wedding-card__intro" data-intro>
+    <p class="wedding-card__intro-kicker">You're invited</p>
+    <h2 class="wedding-card__intro-title"><span data-inviter>{{ section.settings.inviter_name }}</span> invites you to a wedding</h2>
+    <button class="wedding-card__button wedding-card__button--primary" type="button" data-open-invitation>{{ section.settings.open_button_label }}</button>
+  </div>
+
   <div class="wedding-card__curtains" aria-hidden="true">
     <div class="wedding-card__curtain wedding-card__curtain--left"></div>
     <div class="wedding-card__curtain wedding-card__curtain--right"></div>
   </div>
 
-  <div class="wedding-card__scene">
+  <div class="wedding-card__scene" data-scene>
     <div class="wedding-card__backdrop" aria-hidden="true"></div>
     <div class="wedding-card__spotlight" aria-hidden="true"></div>
     <div class="wedding-card__stage" aria-hidden="true"></div>
@@ -36,29 +43,40 @@
       </div>
     </div>
 
-    <div class="wedding-card__content">
+    <div class="wedding-card__content" data-content>
       {% if section.settings.eyebrow != blank %}
         <p class="wedding-card__eyebrow">{{ section.settings.eyebrow }}</p>
       {% endif %}
 
-      <h2 class="wedding-card__title" data-names>{{ section.settings.bride_name }} <span>♥</span> {{ section.settings.groom_name }}</h2>
-      <div class="wedding-card__divider"></div>
+      <div class="wedding-card__stepper" data-stepper>
+        <div class="wedding-card__step is-active" data-step="names">
+          <h2 class="wedding-card__title" data-names>{{ section.settings.bride_name }} <span>♥</span> {{ section.settings.groom_name }}</h2>
+        </div>
 
-      <div class="wedding-card__message" data-message>
-        {% if section.settings.message != blank %}
-          {{ section.settings.message }}
-        {% else %}
-          <p></p>
-        {% endif %}
+        <div class="wedding-card__step" data-step="date">
+          <p class="wedding-card__date{% if section.settings.wedding_date == blank %} wedding-card__date--hidden{% endif %}" data-date>{{ section.settings.date_label }} {{ section.settings.wedding_date }}</p>
+        </div>
+
+        <div class="wedding-card__step" data-step="message">
+          <div class="wedding-card__message" data-message>
+            {% if section.settings.message != blank %}
+              {{ section.settings.message }}
+            {% else %}
+              <p></p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="wedding-card__step" data-step="location">
+          <div class="wedding-card__actions">
+            <a class="wedding-card__button wedding-card__button--primary{% if section.settings.location_url == blank %} wedding-card__button--hidden{% endif %}" href="{{ section.settings.location_url }}" target="_blank" rel="noopener noreferrer" data-location>
+              📍 <span data-location-label>{{ section.settings.location_label }}</span>
+            </a>
+          </div>
+        </div>
       </div>
 
-      <p class="wedding-card__date{% if section.settings.wedding_date == blank %} wedding-card__date--hidden{% endif %}" data-date>{{ section.settings.date_label }} {{ section.settings.wedding_date }}</p>
-
-      <div class="wedding-card__actions">
-        <a class="wedding-card__button wedding-card__button--primary{% if section.settings.location_url == blank %} wedding-card__button--hidden{% endif %}" href="{{ section.settings.location_url }}" target="_blank" rel="noopener noreferrer" data-location>
-          📍 <span data-location-label>{{ section.settings.location_label }}</span>
-        </a>
-
+      <div class="wedding-card__replay-wrap">
         <button class="wedding-card__button wedding-card__button--ghost" type="button" data-replay>
           Replay Animation
         </button>
@@ -83,6 +101,7 @@
     --text-soft: {{ section.settings.text_soft_color }};
     --curtain-base: {{ section.settings.curtain_color }};
     --curtain-shadow: {{ section.settings.curtain_shadow_color }};
+    --curtain-open-duration: 1800ms;
     position: fixed;
     top: 0;
     left: 0;
@@ -105,6 +124,41 @@
     box-sizing: border-box;
   }
 
+  #wedding-card-{{ section.id }} .wedding-card__intro {
+    position: absolute;
+    inset: 0;
+    z-index: 12;
+    display: grid;
+    place-content: center;
+    gap: 14px;
+    text-align: center;
+    padding: 28px;
+    background: linear-gradient(180deg, rgba(15, 2, 6, 0.82), rgba(37, 0, 13, 0.86));
+    transition: opacity .5s ease, visibility .5s ease;
+  }
+
+  #wedding-card-{{ section.id }} .wedding-card__intro.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  #wedding-card-{{ section.id }} .wedding-card__intro-kicker {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: .2em;
+    font-size: .72rem;
+    color: #ffdca8;
+  }
+
+  #wedding-card-{{ section.id }} .wedding-card__intro-title {
+    margin: 0;
+    max-width: 22ch;
+    font-size: clamp(1.7rem, 6vw, 2.8rem);
+    font-family: Georgia, "Times New Roman", serif;
+    color: #fff1f3;
+  }
+
   #wedding-card-{{ section.id }} .wedding-card__scene {
     position: relative;
     width: 100%;
@@ -114,6 +168,14 @@
     align-items: center;
     justify-content: center;
     padding: clamp(20px, 3vw, 40px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .55s ease;
+  }
+
+  #wedding-card-{{ section.id }}.is-open .wedding-card__scene {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   #wedding-card-{{ section.id }} .wedding-card__backdrop,
@@ -125,6 +187,28 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
+  }
+
+  #wedding-card-{{ section.id }} .wedding-card__curtain {
+    position: absolute;
+    top: 0;
+    width: 50.5%;
+    height: 100%;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--curtain-base) 74%, #180005 26%), var(--curtain-base) 40%, color-mix(in srgb, var(--curtain-shadow) 72%, #000 28%)),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0 16px, rgba(0,0,0,0.08) 16px 32px);
+    box-shadow: inset -12px 0 28px rgba(0, 0, 0, 0.35);
+  }
+
+  #wedding-card-{{ section.id }} .wedding-card__curtain--left { left: 0; }
+  #wedding-card-{{ section.id }} .wedding-card__curtain--right { right: 0; box-shadow: inset 12px 0 28px rgba(0, 0, 0, 0.35); }
+
+  #wedding-card-{{ section.id }}.is-opening .wedding-card__curtain--left {
+    animation: wedding-card-open-left-{{ section.id }} var(--curtain-open-duration) forwards cubic-bezier(.77, 0, .18, 1);
+  }
+
+  #wedding-card-{{ section.id }}.is-opening .wedding-card__curtain--right {
+    animation: wedding-card-open-right-{{ section.id }} var(--curtain-open-duration) forwards cubic-bezier(.77, 0, .18, 1);
   }
 
   #wedding-card-{{ section.id }} .wedding-card__backdrop::before,
@@ -154,61 +238,13 @@
     animation: wedding-card-float-{{ section.id }} 11s ease-in-out infinite alternate-reverse;
   }
 
-  #wedding-card-{{ section.id }} .wedding-card__curtain {
-    position: absolute;
-    top: 0;
-    width: 50.5%;
-    height: 100%;
-    background:
-      linear-gradient(90deg, color-mix(in srgb, var(--curtain-base) 74%, #180005 26%), var(--curtain-base) 40%, color-mix(in srgb, var(--curtain-shadow) 72%, #000 28%)),
-      repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0 16px, rgba(0,0,0,0.08) 16px 32px);
-    box-shadow: inset -12px 0 28px rgba(0, 0, 0, 0.35);
-    animation-duration: 2.4s;
-    animation-delay: .25s;
-    animation-fill-mode: forwards;
-    animation-timing-function: cubic-bezier(.77, 0, .18, 1);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent 24%, transparent 74%, rgba(0,0,0,0.22));
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain--left {
-    left: 0;
-    animation-name: wedding-card-open-left-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain--right {
-    right: 0;
-    box-shadow: inset 12px 0 28px rgba(0, 0, 0, 0.35);
-    animation-name: wedding-card-open-right-{{ section.id }};
-  }
-
   #wedding-card-{{ section.id }} .wedding-card__spotlight {
     inset: auto 50% 18%;
     width: min(90vw, 980px);
     height: min(72vh, 720px);
     transform: translateX(-50%);
-    background:
-      radial-gradient(circle at center, rgba(255, 236, 194, 0.28), rgba(255, 236, 194, 0.1) 28%, transparent 62%);
+    background: radial-gradient(circle at center, rgba(255, 236, 194, 0.28), rgba(255, 236, 194, 0.1) 28%, transparent 62%);
     filter: blur(4px);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__spotlight::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: -16%;
-    width: 62%;
-    height: 78%;
-    transform: translateX(-50%);
-    background: linear-gradient(180deg, rgba(255, 250, 230, 0.32), transparent 74%);
-    clip-path: polygon(47% 0, 53% 0, 100% 100%, 0 100%);
-    filter: blur(12px);
-    opacity: .9;
   }
 
   #wedding-card-{{ section.id }} .wedding-card__stage {
@@ -249,36 +285,18 @@
     align-items: flex-end;
     justify-content: center;
     filter: drop-shadow(0 26px 36px rgba(0,0,0,.38));
-    animation-duration: 2.35s;
-    animation-delay: 1.05s;
-    animation-fill-mode: forwards;
-    animation-timing-function: cubic-bezier(.2, .8, .2, 1);
     opacity: 0;
   }
 
-  #wedding-card-{{ section.id }} .wedding-card__character::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: 2%;
-    width: 76%;
-    height: 12%;
-    transform: translateX(-50%);
-    background: radial-gradient(circle, rgba(0,0,0,.38), transparent 70%);
-    filter: blur(10px);
-    z-index: -1;
+  #wedding-card-{{ section.id }} .wedding-card__character--bride { left: clamp(4%, 8vw, 15%); }
+  #wedding-card-{{ section.id }} .wedding-card__character--groom { right: clamp(4%, 8vw, 15%); }
+
+  #wedding-card-{{ section.id }}.is-open .wedding-card__character--bride {
+    animation: wedding-card-bride-in-{{ section.id }} 1.9s .6s forwards cubic-bezier(.2, .8, .2, 1);
   }
 
-  #wedding-card-{{ section.id }} .wedding-card__character--bride {
-    left: clamp(4%, 8vw, 15%);
-    transform: translateX(-80vw) scale(.92);
-    animation-name: wedding-card-bride-in-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character--groom {
-    right: clamp(4%, 8vw, 15%);
-    transform: translateX(80vw) scale(.92);
-    animation-name: wedding-card-groom-in-{{ section.id }};
+  #wedding-card-{{ section.id }}.is-open .wedding-card__character--groom {
+    animation: wedding-card-groom-in-{{ section.id }} 1.9s .6s forwards cubic-bezier(.2, .8, .2, 1);
   }
 
   #wedding-card-{{ section.id }} .wedding-card__character-image,
@@ -297,8 +315,6 @@
     border: 1px dashed rgba(255,255,255,.28);
     background: rgba(255,255,255,.08);
     color: var(--text-soft);
-    font-size: 1.1rem;
-    letter-spacing: .1em;
     text-transform: uppercase;
   }
 
@@ -313,818 +329,37 @@
     background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 88%, #fff 12%), color-mix(in srgb, var(--card-bg) 94%, transparent 6%));
     border: 1px solid var(--card-border);
     backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     box-shadow: 0 24px 70px rgba(0,0,0,.35);
-    animation: wedding-card-content-in-{{ section.id }} 1.1s 3s both cubic-bezier(.2, .8, .2, 1);
   }
 
-  #wedding-card-{{ section.id }} .wedding-card__eyebrow {
-    margin: 0 auto 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 16px;
-    border-radius: 999px;
-    background: rgba(255, 215, 162, .1);
-    color: var(--accent);
-    border: 1px solid rgba(255,255,255,.12);
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    font-size: .72rem;
-    font-weight: 600;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__title {
-    margin: 0;
-    font-size: clamp(2.6rem, 6vw, 4.8rem);
-    line-height: .94;
-    color: var(--text-main);
-    font-family: Georgia, "Times New Roman", serif;
-    text-shadow: 0 0 20px rgba(255, 228, 174, .18);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__title span {
-    color: var(--accent);
-    font-size: .82em;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__divider {
-    width: 120px;
-    height: 1px;
-    margin: 18px auto 22px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  #wedding-card-{{ section.id }} .wedding-card__stepper {
     position: relative;
+    min-height: 180px;
+    margin-bottom: 12px;
   }
 
-  #wedding-card-{{ section.id }} .wedding-card__divider::after {
-    content: "◆";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 0 10px;
-    color: var(--accent);
-    background: transparent;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__message {
-    color: var(--text-soft);
-    font-size: clamp(1rem, 2vw, 1.1rem);
-    line-height: 1.8;
-    margin: 0 auto 14px;
-    max-width: 34ch;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__message p {
-    margin: 0;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__date {
-    margin: 0 0 24px;
-    font-size: .92rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--text-main) 72%, transparent 28%);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__actions {
-    display: flex;
-    justify-content: center;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button {
-    appearance: none;
-    border: 0;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 190px;
-    padding: 14px 22px;
-    border-radius: 999px;
-    text-decoration: none;
-    font-size: .95rem;
-    font-weight: 600;
-    transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button:hover {
-    transform: translateY(-3px) scale(1.015);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button--hidden,
-  #wedding-card-{{ section.id }} .wedding-card__date--hidden {
-    display: none;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button--primary {
-    color: #2d0d12;
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    box-shadow: 0 14px 30px rgba(255, 203, 116, .26);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button--ghost {
-    color: var(--text-main);
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.12);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__footer {
-    margin: 22px 0 0;
-    color: color-mix(in srgb, var(--text-main) 60%, transparent 40%);
-    font-size: .82rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-  }
-
-  @keyframes wedding-card-open-left-{{ section.id }} {
-    to { transform: translateX(-108%); }
-  }
-
-  @keyframes wedding-card-open-right-{{ section.id }} {
-    to { transform: translateX(108%); }
-  }
-
-  @keyframes wedding-card-bride-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateX(-80vw) scale(.92); }
-    70% { opacity: 1; }
-    100% { opacity: 1; transform: translateX(min(16vw, 120px)) scale(1); }
-  }
-
-  @keyframes wedding-card-groom-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateX(80vw) scale(.92); }
-    70% { opacity: 1; }
-    100% { opacity: 1; transform: translateX(max(-16vw, -120px)) scale(1); }
-  }
-
-  @keyframes wedding-card-content-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateY(40px) scale(.96); filter: blur(10px); }
-    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-  }
-
-  @keyframes wedding-card-petal-fall-{{ section.id }} {
-    0% {
-      opacity: 0;
-      transform: translate3d(0, -8vh, 0) rotate(0deg) scale(.86);
-    }
-    10% {
-      opacity: .92;
-    }
-    50% {
-      transform: translate3d(calc(var(--drift) * .55), 50vh, 0) rotate(calc(var(--spin) * .55)) scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: translate3d(var(--drift), 118vh, 0) rotate(var(--spin)) scale(1.08);
-    }
-  }
-
-  @keyframes wedding-card-float-{{ section.id }} {
-    from { transform: translate3d(0, 0, 0) scale(1); }
-    to { transform: translate3d(18px, -22px, 0) scale(1.06); }
-  }
-
-  @media screen and (max-width: 989px) {
-    #wedding-card-{{ section.id }} .wedding-card__characters {
-      height: min(48vh, 480px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character {
-      width: clamp(150px, 28vw, 240px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character--bride {
-      left: 2%;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character--groom {
-      right: 2%;
-    }
-  }
-
-  @media screen and (max-width: 749px) {
-    #wedding-card-{{ section.id }} .wedding-card__scene {
-      align-items: flex-start;
-      padding-top: 40px;
-      padding-bottom: 180px;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__content {
-      width: min(94vw, 480px);
-      padding: 26px 18px;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__characters {
-      height: min(38vh, 330px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character {
-      width: clamp(120px, 32vw, 180px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__actions {
-      flex-direction: column;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__button {
-      width: 100%;
-    }
-  }
-</style>
-
-<script>
-  (() => {
-    const root = document.getElementById('wedding-card-{{ section.id }}');
-    if (!root) return;
-
-    const petalsHost = root.querySelector('[data-petals]');
-    const replayButton = root.querySelector('[data-replay]');
-    const namesEl = root.querySelector('[data-names]');
-    const messageEl = root.querySelector('[data-message]');
-    const dateEl = root.querySelector('[data-date]');
-    const locationEl = root.querySelector('[data-location]');
-    const locationLabelEl = root.querySelector('[data-location-label]');
-    const params = new URLSearchParams(window.location.search);
-    let petalInterval;
-
-    function decodeMessage(value) {
-      if (!value) return '';
-      try {
-        return window.atob(value);
-      } catch (error) {
-        return value;
-      }
-    }
-
-    function hydrateFromUrl() {
-      const brideName = params.get('b') || root.dataset.brideName || '';
-      const groomName = params.get('g') || root.dataset.groomName || '';
-      const weddingDate = params.get('d') || root.dataset.weddingDate || '';
-      const dateLabel = root.dataset.dateLabel || 'Wedding Date:';
-      const locationUrl = params.get('l') || root.dataset.locationUrl || '';
-      const locationLabel = params.get('ll') || root.dataset.locationLabel || 'View Location';
-      const customMessage = decodeMessage(params.get('m')) || messageEl?.textContent?.trim() || '';
-
-      if (namesEl) {
-        namesEl.innerHTML = `${brideName} <span>♥</span> ${groomName}`.trim();
-      }
-
-      if (messageEl && customMessage) {
-        const messageParagraph = messageEl.querySelector('p') || document.createElement('p');
-        messageParagraph.textContent = customMessage;
-        if (!messageParagraph.parentNode) messageEl.appendChild(messageParagraph);
-      }
-
-      if (dateEl) {
-        const hasDate = Boolean(weddingDate);
-        dateEl.textContent = hasDate ? `${dateLabel} ${weddingDate}` : '';
-        dateEl.style.display = hasDate ? '' : 'none';
-        dateEl.classList.toggle('wedding-card__date--hidden', !hasDate);
-      }
-
-      if (locationEl && locationLabelEl) {
-        if (locationUrl) {
-          locationEl.href = locationUrl;
-          locationEl.style.display = '';
-          locationEl.classList.remove('wedding-card__button--hidden');
-          locationLabelEl.textContent = locationLabel;
-        } else {
-          locationEl.style.display = 'none';
-          locationEl.classList.add('wedding-card__button--hidden');
-        }
-      }
-    }
-
-    function createPetal() {
-      const petal = document.createElement('span');
-      petal.className = 'wedding-card__petal';
-      petal.style.setProperty('--left', `${Math.random() * 100}%`);
-      petal.style.setProperty('--size', `${12 + Math.random() * 16}px`);
-      petal.style.setProperty('--duration', `${5.2 + Math.random() * 2.8}s`);
-      petal.style.setProperty('--delay', `${Math.random() * 0.4}s`);
-      petal.style.setProperty('--drift', `${-160 + Math.random() * 320}px`);
-      petal.style.setProperty('--spin', `${-220 + Math.random() * 440}deg`);
-      petalsHost.appendChild(petal);
-      window.setTimeout(() => petal.remove(), 9000);
-    }
-
-    function startPetals() {
-      window.clearInterval(petalInterval);
-      petalsHost.innerHTML = '';
-
-      for (let i = 0; i < 20; i += 1) {
-        window.setTimeout(createPetal, i * 110);
-      }
-
-      petalInterval = window.setInterval(() => {
-        createPetal();
-        if (Math.random() > 0.45) createPetal();
-      }, 180);
-    }
-
-    function replayCssAnimation(element) {
-      if (!element) return;
-      element.style.animation = 'none';
-      void element.offsetWidth;
-      element.style.animation = '';
-    }
-
-    function restartAnimations() {
-      root.querySelectorAll('.wedding-card__curtain, .wedding-card__character, .wedding-card__content').forEach(replayCssAnimation);
-      startPetals();
-    }
-
-    hydrateFromUrl();
-    replayButton?.addEventListener('click', restartAnimations);
-    startPetals();
-  })();
-</script>
-
-{% schema %}
-{
-  "name": "Premium wedding card",
-  "tag": "section",
-  "class": "section section-premium-wedding-card",
-  "settings": [
-    {
-      "type": "text",
-      "id": "eyebrow",
-      "label": "Eyebrow text",
-      "default": "A New Chapter Begins"
-    },
-    {
-      "type": "text",
-      "id": "bride_name",
-      "label": "Bride name",
-      "default": "Aarohi"
-    },
-    {
-      "type": "text",
-      "id": "groom_name",
-      "label": "Groom name",
-      "default": "Vivaan"
-    },
-    {
-      "type": "richtext",
-      "id": "message",
-      "label": "Message",
-      "default": "<p>Together forever, with love that grows more graceful and beautiful every day.</p>"
-    },
-    {
-      "type": "text",
-      "id": "date_label",
-      "label": "Date label",
-      "default": "Wedding Date:"
-    },
-    {
-      "type": "text",
-      "id": "wedding_date",
-      "label": "Wedding date",
-      "default": "18 March 2026"
-    },
-    {
-      "type": "url",
-      "id": "location_url",
-      "label": "Location URL"
-    },
-    {
-      "type": "text",
-      "id": "location_label",
-      "label": "Location button label",
-      "default": "View Location"
-    },
-    {
-      "type": "text",
-      "id": "footer_text",
-      "label": "Footer text",
-      "default": "Made with love for your special day"
-    },
-    {
-      "type": "image_picker",
-      "id": "bride_image",
-      "label": "Bride image"
-    },
-    {
-      "type": "image_picker",
-      "id": "groom_image",
-      "label": "Groom image"
-    },
-    {
-      "type": "header",
-      "content": "Colors"
-    },
-    {
-      "type": "color",
-      "id": "background_top",
-      "label": "Background top",
-      "default": "#180008"
-    },
-    {
-      "type": "color",
-      "id": "background_mid",
-      "label": "Background middle",
-      "default": "#2c0010"
-    },
-    {
-      "type": "color",
-      "id": "background_bottom",
-      "label": "Background bottom",
-      "default": "#090004"
-    },
-    {
-      "type": "color",
-      "id": "curtain_color",
-      "label": "Curtain color",
-      "default": "#7b001f"
-    },
-    {
-      "type": "color",
-      "id": "curtain_shadow_color",
-      "label": "Curtain shadow color",
-      "default": "#3d000f"
-    },
-    {
-      "type": "color",
-      "id": "card_background",
-      "label": "Card background",
-      "default": "#ffffff"
-    },
-    {
-      "type": "color",
-      "id": "card_border",
-      "label": "Card border",
-      "default": "#fdf1ea"
-    },
-    {
-      "type": "color",
-      "id": "accent_color",
-      "label": "Accent color",
-      "default": "#9c0039"
-    },
-    {
-      "type": "color",
-      "id": "accent_strong_color",
-      "label": "Accent strong color",
-      "default": "#e8b84d"
-    },
-    {
-      "type": "color",
-      "id": "petal_color_start",
-      "label": "Petal color start",
-      "default": "#ffd6e5"
-    },
-    {
-      "type": "color",
-      "id": "petal_color_end",
-      "label": "Petal color end",
-      "default": "#ee5b95"
-    },
-    {
-      "type": "color",
-      "id": "text_color",
-      "label": "Text color",
-      "default": "#9c0039"
-    },
-    {
-      "type": "color",
-      "id": "text_soft_color",
-      "label": "Soft text color",
-      "default": "#9c0039"
-    }
-  ],
-  "presets": [
-    {
-      "name": "Premium wedding card"
-    }
-  ]
-}
-{% endschema %}<section
-  id="wedding-card-{{ section.id }}"
-  class="wedding-card-section wedding-card-section--{{ section.id }}"
-  data-bride-name="{{ section.settings.bride_name | escape }}"
-  data-groom-name="{{ section.settings.groom_name | escape }}"
-  data-date-label="{{ section.settings.date_label | escape }}"
-  data-wedding-date="{{ section.settings.wedding_date | escape }}"
-  data-location-label="{{ section.settings.location_label | escape }}"
-  data-location-url="{{ section.settings.location_url | escape }}"
->
-  <div class="wedding-card__curtains" aria-hidden="true">
-    <div class="wedding-card__curtain wedding-card__curtain--left"></div>
-    <div class="wedding-card__curtain wedding-card__curtain--right"></div>
-  </div>
-
-  <div class="wedding-card__scene">
-    <div class="wedding-card__backdrop" aria-hidden="true"></div>
-    <div class="wedding-card__spotlight" aria-hidden="true"></div>
-    <div class="wedding-card__stage" aria-hidden="true"></div>
-    <div class="wedding-card__petals" data-petals></div>
-
-    <div class="wedding-card__characters" aria-hidden="true">
-      <div class="wedding-card__character wedding-card__character--bride">
-        {% if section.settings.bride_image != blank %}
-          {{ section.settings.bride_image | image_url: width: 900 | image_tag: loading: 'lazy', class: 'wedding-card__character-image', alt: section.settings.bride_name | escape }}
-        {% else %}
-          <div class="wedding-card__character-placeholder">Bride</div>
-        {% endif %}
-      </div>
-      <div class="wedding-card__character wedding-card__character--groom">
-        {% if section.settings.groom_image != blank %}
-          {{ section.settings.groom_image | image_url: width: 900 | image_tag: loading: 'lazy', class: 'wedding-card__character-image', alt: section.settings.groom_name | escape }}
-        {% else %}
-          <div class="wedding-card__character-placeholder">Groom</div>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="wedding-card__content">
-      {% if section.settings.eyebrow != blank %}
-        <p class="wedding-card__eyebrow">{{ section.settings.eyebrow }}</p>
-      {% endif %}
-
-      <h2 class="wedding-card__title" data-names>{{ section.settings.bride_name }} <span>♥</span> {{ section.settings.groom_name }}</h2>
-      <div class="wedding-card__divider"></div>
-
-      <div class="wedding-card__message" data-message>
-        {% if section.settings.message != blank %}
-          {{ section.settings.message }}
-        {% else %}
-          <p></p>
-        {% endif %}
-      </div>
-
-      <p class="wedding-card__date{% if section.settings.wedding_date == blank %} wedding-card__date--hidden{% endif %}" data-date>{{ section.settings.date_label }} {{ section.settings.wedding_date }}</p>
-
-      <div class="wedding-card__actions">
-        <a class="wedding-card__button wedding-card__button--primary{% if section.settings.location_url == blank %} wedding-card__button--hidden{% endif %}" href="{{ section.settings.location_url }}" target="_blank" rel="noopener noreferrer" data-location>
-          📍 <span data-location-label>{{ section.settings.location_label }}</span>
-        </a>
-
-        <button class="wedding-card__button wedding-card__button--ghost" type="button" data-replay>
-          Replay Animation
-        </button>
-      </div>
-
-      {% if section.settings.footer_text != blank %}
-        <p class="wedding-card__footer">{{ section.settings.footer_text }}</p>
-      {% endif %}
-    </div>
-  </div>
-</section>
-
-<style>
-  #wedding-card-{{ section.id }} {
-    --card-bg: {{ section.settings.card_background }};
-    --card-border: {{ section.settings.card_border }};
-    --accent: {{ section.settings.accent_color }};
-    --accent-strong: {{ section.settings.accent_strong_color }};
-    --petal-start: {{ section.settings.petal_color_start }};
-    --petal-end: {{ section.settings.petal_color_end }};
-    --text-main: {{ section.settings.text_color }};
-    --text-soft: {{ section.settings.text_soft_color }};
-    --curtain-base: {{ section.settings.curtain_color }};
-    --curtain-shadow: {{ section.settings.curtain_shadow_color }};
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 10000;
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100svh;
-    overflow: hidden;
-    isolation: isolate;
-    color: var(--text-main);
-    background:
-      radial-gradient(circle at top, rgba(255, 198, 214, 0.16), transparent 24%),
-      radial-gradient(circle at bottom, rgba(255, 218, 138, 0.18), transparent 26%),
-      linear-gradient(180deg, {{ section.settings.background_top }} 0%, {{ section.settings.background_mid }} 48%, {{ section.settings.background_bottom }} 100%);
-  }
-
-  #wedding-card-{{ section.id }} *,
-  #wedding-card-{{ section.id }} *::before,
-  #wedding-card-{{ section.id }} *::after {
-    box-sizing: border-box;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__scene {
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100svh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: clamp(20px, 3vw, 40px);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__backdrop,
-  #wedding-card-{{ section.id }} .wedding-card__spotlight,
-  #wedding-card-{{ section.id }} .wedding-card__stage,
-  #wedding-card-{{ section.id }} .wedding-card__petals,
-  #wedding-card-{{ section.id }} .wedding-card__characters,
-  #wedding-card-{{ section.id }} .wedding-card__curtains {
+  #wedding-card-{{ section.id }} .wedding-card__step {
     position: absolute;
     inset: 0;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(18px) scale(.98);
+    transition: opacity .65s ease, transform .65s ease, visibility .65s ease;
     pointer-events: none;
   }
 
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::before,
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(20px);
-    opacity: 0.55;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::before {
-    width: min(40vw, 420px);
-    height: min(40vw, 420px);
-    top: 10%;
-    left: 8%;
-    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 68%);
-    animation: wedding-card-float-{{ section.id }} 9s ease-in-out infinite alternate;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::after {
-    width: min(34vw, 360px);
-    height: min(34vw, 360px);
-    right: 8%;
-    top: 12%;
-    background: radial-gradient(circle, rgba(255, 206, 153, 0.22), transparent 70%);
-    animation: wedding-card-float-{{ section.id }} 11s ease-in-out infinite alternate-reverse;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain {
-    position: absolute;
-    top: 0;
-    width: 50.5%;
-    height: 100%;
-    background:
-      linear-gradient(90deg, color-mix(in srgb, var(--curtain-base) 74%, #180005 26%), var(--curtain-base) 40%, color-mix(in srgb, var(--curtain-shadow) 72%, #000 28%)),
-      repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0 16px, rgba(0,0,0,0.08) 16px 32px);
-    box-shadow: inset -12px 0 28px rgba(0, 0, 0, 0.35);
-    animation-duration: 2.4s;
-    animation-delay: .25s;
-    animation-fill-mode: forwards;
-    animation-timing-function: cubic-bezier(.77, 0, .18, 1);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent 24%, transparent 74%, rgba(0,0,0,0.22));
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain--left {
-    left: 0;
-    animation-name: wedding-card-open-left-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain--right {
-    right: 0;
-    box-shadow: inset 12px 0 28px rgba(0, 0, 0, 0.35);
-    animation-name: wedding-card-open-right-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__spotlight {
-    inset: auto 50% 18%;
-    width: min(90vw, 980px);
-    height: min(72vh, 720px);
-    transform: translateX(-50%);
-    background:
-      radial-gradient(circle at center, rgba(255, 236, 194, 0.28), rgba(255, 236, 194, 0.1) 28%, transparent 62%);
-    filter: blur(4px);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__spotlight::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: -16%;
-    width: 62%;
-    height: 78%;
-    transform: translateX(-50%);
-    background: linear-gradient(180deg, rgba(255, 250, 230, 0.32), transparent 74%);
-    clip-path: polygon(47% 0, 53% 0, 100% 100%, 0 100%);
-    filter: blur(12px);
-    opacity: .9;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__stage {
-    inset: auto 50% 0;
-    width: min(1000px, 92vw);
-    height: 30vh;
-    transform: translateX(-50%);
-    background: radial-gradient(circle at center, rgba(255, 220, 168, 0.38), rgba(255, 220, 168, 0.08) 35%, transparent 74%);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__petal {
-    position: absolute;
-    top: -12vh;
-    left: var(--left);
-    width: var(--size);
-    height: calc(var(--size) * .74);
-    border-radius: 70% 0 70% 0;
-    opacity: 0;
-    background:
-      radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.18) 24%, transparent 38%),
-      linear-gradient(135deg, var(--petal-start), var(--petal-end));
-    box-shadow: 0 0 16px rgba(255, 96, 149, 0.2);
-    animation: wedding-card-petal-fall-{{ section.id }} var(--duration) linear forwards;
-    animation-delay: var(--delay);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__characters {
-    inset: auto 0 0;
-    height: min(58vh, 600px);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character {
-    position: absolute;
-    bottom: 0;
-    width: clamp(180px, 22vw, 300px);
-    aspect-ratio: 0.66;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    filter: drop-shadow(0 26px 36px rgba(0,0,0,.38));
-    animation-duration: 2.35s;
-    animation-delay: 1.05s;
-    animation-fill-mode: forwards;
-    animation-timing-function: cubic-bezier(.2, .8, .2, 1);
-    opacity: 0;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: 2%;
-    width: 76%;
-    height: 12%;
-    transform: translateX(-50%);
-    background: radial-gradient(circle, rgba(0,0,0,.38), transparent 70%);
-    filter: blur(10px);
-    z-index: -1;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character--bride {
-    left: clamp(4%, 8vw, 15%);
-    transform: translateX(-80vw) scale(.92);
-    animation-name: wedding-card-bride-in-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character--groom {
-    right: clamp(4%, 8vw, 15%);
-    transform: translateX(80vw) scale(.92);
-    animation-name: wedding-card-groom-in-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character-image,
-  #wedding-card-{{ section.id }} .wedding-card__character-placeholder {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center bottom;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 28px;
-    border: 1px dashed rgba(255,255,255,.28);
-    background: rgba(255,255,255,.08);
-    color: var(--text-soft);
-    font-size: 1.1rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__content {
-    position: relative;
-    z-index: 2;
-    width: min(560px, 92vw);
-    margin: 0 auto;
-    padding: clamp(28px, 3.5vw, 42px);
-    border-radius: 32px;
-    text-align: center;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 88%, #fff 12%), color-mix(in srgb, var(--card-bg) 94%, transparent 6%));
-    border: 1px solid var(--card-border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 24px 70px rgba(0,0,0,.35);
-    animation: wedding-card-content-in-{{ section.id }} 1.1s 3s both cubic-bezier(.2, .8, .2, 1);
+  #wedding-card-{{ section.id }} .wedding-card__step.is-active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
   }
 
   #wedding-card-{{ section.id }} .wedding-card__eyebrow {
     margin: 0 auto 16px;
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
     padding: 8px 16px;
     border-radius: 999px;
     background: rgba(255, 215, 162, .1);
@@ -1138,55 +373,27 @@
 
   #wedding-card-{{ section.id }} .wedding-card__title {
     margin: 0;
-    font-size: clamp(2.6rem, 6vw, 4.8rem);
+    font-size: clamp(2.2rem, 6vw, 4.4rem);
     line-height: .94;
-    color: var(--text-main);
     font-family: Georgia, "Times New Roman", serif;
-    text-shadow: 0 0 20px rgba(255, 228, 174, .18);
   }
 
-  #wedding-card-{{ section.id }} .wedding-card__title span {
-    color: var(--accent);
-    font-size: .82em;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__divider {
-    width: 120px;
-    height: 1px;
-    margin: 18px auto 22px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    position: relative;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__divider::after {
-    content: "◆";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 0 10px;
-    color: var(--accent);
-    background: transparent;
-  }
+  #wedding-card-{{ section.id }} .wedding-card__title span { color: var(--accent); }
 
   #wedding-card-{{ section.id }} .wedding-card__message {
     color: var(--text-soft);
-    font-size: clamp(1rem, 2vw, 1.1rem);
     line-height: 1.8;
     margin: 0 auto 14px;
     max-width: 34ch;
   }
 
-  #wedding-card-{{ section.id }} .wedding-card__message p {
-    margin: 0;
-  }
+  #wedding-card-{{ section.id }} .wedding-card__message p { margin: 0; }
 
   #wedding-card-{{ section.id }} .wedding-card__date {
-    margin: 0 0 24px;
+    margin: 12px 0 18px;
     font-size: .92rem;
     letter-spacing: .12em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--text-main) 72%, transparent 28%);
   }
 
   #wedding-card-{{ section.id }} .wedding-card__actions {
@@ -1194,6 +401,12 @@
     justify-content: center;
     gap: 14px;
     flex-wrap: wrap;
+  }
+
+  #wedding-card-{{ section.id }} .wedding-card__replay-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
   }
 
   #wedding-card-{{ section.id }} .wedding-card__button {
@@ -1209,17 +422,10 @@
     text-decoration: none;
     font-size: .95rem;
     font-weight: 600;
-    transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
+    transition: transform .3s ease, box-shadow .3s ease;
   }
 
-  #wedding-card-{{ section.id }} .wedding-card__button:hover {
-    transform: translateY(-3px) scale(1.015);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button--hidden,
-  #wedding-card-{{ section.id }} .wedding-card__date--hidden {
-    display: none;
-  }
+  #wedding-card-{{ section.id }} .wedding-card__button:hover { transform: translateY(-2px); }
 
   #wedding-card-{{ section.id }} .wedding-card__button--primary {
     color: #2d0d12;
@@ -1233,54 +439,33 @@
     border: 1px solid rgba(255,255,255,.12);
   }
 
+  #wedding-card-{{ section.id }} .wedding-card__button--hidden,
+  #wedding-card-{{ section.id }} .wedding-card__date--hidden { display: none; }
+
   #wedding-card-{{ section.id }} .wedding-card__footer {
     margin: 22px 0 0;
-    color: color-mix(in srgb, var(--text-main) 60%, transparent 40%);
     font-size: .82rem;
     letter-spacing: .08em;
     text-transform: uppercase;
+    color: color-mix(in srgb, var(--text-main) 65%, transparent 35%);
   }
 
-  @keyframes wedding-card-open-left-{{ section.id }} {
-    to { transform: translateX(-108%); }
-  }
-
-  @keyframes wedding-card-open-right-{{ section.id }} {
-    to { transform: translateX(108%); }
-  }
-
+  @keyframes wedding-card-open-left-{{ section.id }} { to { transform: translateX(-108%); } }
+  @keyframes wedding-card-open-right-{{ section.id }} { to { transform: translateX(108%); } }
   @keyframes wedding-card-bride-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateX(-80vw) scale(.92); }
-    70% { opacity: 1; }
-    100% { opacity: 1; transform: translateX(min(16vw, 120px)) scale(1); }
+    0% { opacity: 0; transform: translateX(-60vw) scale(.9); }
+    100% { opacity: 1; transform: translateX(min(14vw, 90px)) scale(1); }
   }
 
   @keyframes wedding-card-groom-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateX(80vw) scale(.92); }
-    70% { opacity: 1; }
-    100% { opacity: 1; transform: translateX(max(-16vw, -120px)) scale(1); }
-  }
-
-  @keyframes wedding-card-content-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateY(40px) scale(.96); filter: blur(10px); }
-    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    0% { opacity: 0; transform: translateX(60vw) scale(.9); }
+    100% { opacity: 1; transform: translateX(max(-14vw, -90px)) scale(1); }
   }
 
   @keyframes wedding-card-petal-fall-{{ section.id }} {
-    0% {
-      opacity: 0;
-      transform: translate3d(0, -8vh, 0) rotate(0deg) scale(.86);
-    }
-    10% {
-      opacity: .92;
-    }
-    50% {
-      transform: translate3d(calc(var(--drift) * .55), 50vh, 0) rotate(calc(var(--spin) * .55)) scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: translate3d(var(--drift), 118vh, 0) rotate(var(--spin)) scale(1.08);
-    }
+    0% { opacity: 0; transform: translate3d(0, -8vh, 0) rotate(0deg) scale(.86); }
+    10% { opacity: .92; }
+    100% { opacity: 0; transform: translate3d(var(--drift), 118vh, 0) rotate(var(--spin)) scale(1.08); }
   }
 
   @keyframes wedding-card-float-{{ section.id }} {
@@ -1288,51 +473,13 @@
     to { transform: translate3d(18px, -22px, 0) scale(1.06); }
   }
 
-  @media screen and (max-width: 989px) {
-    #wedding-card-{{ section.id }} .wedding-card__characters {
-      height: min(48vh, 480px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character {
-      width: clamp(150px, 28vw, 240px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character--bride {
-      left: 2%;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character--groom {
-      right: 2%;
-    }
-  }
-
   @media screen and (max-width: 749px) {
-    #wedding-card-{{ section.id }} .wedding-card__scene {
-      align-items: flex-start;
-      padding-top: 40px;
-      padding-bottom: 180px;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__content {
-      width: min(94vw, 480px);
-      padding: 26px 18px;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__characters {
-      height: min(38vh, 330px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character {
-      width: clamp(120px, 32vw, 180px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__actions {
-      flex-direction: column;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__button {
-      width: 100%;
-    }
+    #wedding-card-{{ section.id }} .wedding-card__scene { align-items: flex-start; padding-top: 40px; padding-bottom: 160px; }
+    #wedding-card-{{ section.id }} .wedding-card__content { width: min(94vw, 480px); padding: 24px 18px; }
+    #wedding-card-{{ section.id }} .wedding-card__actions { flex-direction: column; }
+    #wedding-card-{{ section.id }} .wedding-card__button { width: 100%; }
+    #wedding-card-{{ section.id }} .wedding-card__characters { height: min(38vh, 330px); }
+    #wedding-card-{{ section.id }} .wedding-card__character { width: clamp(120px, 32vw, 180px); }
   }
 </style>
 
@@ -1341,15 +488,24 @@
     const root = document.getElementById('wedding-card-{{ section.id }}');
     if (!root) return;
 
-    const petalsHost = root.querySelector('[data-petals]');
+    const intro = root.querySelector('[data-intro]');
+    const scene = root.querySelector('[data-scene]');
+    const openButton = root.querySelector('[data-open-invitation]');
     const replayButton = root.querySelector('[data-replay]');
+    const petalsHost = root.querySelector('[data-petals]');
     const namesEl = root.querySelector('[data-names]');
-    const messageEl = root.querySelector('[data-message]');
     const dateEl = root.querySelector('[data-date]');
+    const messageEl = root.querySelector('[data-message]');
     const locationEl = root.querySelector('[data-location]');
     const locationLabelEl = root.querySelector('[data-location-label]');
+    const inviterEl = root.querySelector('[data-inviter]');
+    const stepEls = Array.from(root.querySelectorAll('[data-step]'));
+
     const params = new URLSearchParams(window.location.search);
+    const stepTimers = [];
     let petalInterval;
+    const curtainOpenDuration = 1800;
+    const stepDuration = 2200;
 
     function decodeMessage(value) {
       if (!value) return '';
@@ -1367,11 +523,11 @@
       const dateLabel = root.dataset.dateLabel || 'Wedding Date:';
       const locationUrl = params.get('l') || root.dataset.locationUrl || '';
       const locationLabel = params.get('ll') || root.dataset.locationLabel || 'View Location';
+      const inviterName = params.get('i') || root.dataset.inviterName || 'Saurabh';
       const customMessage = decodeMessage(params.get('m')) || messageEl?.textContent?.trim() || '';
 
-      if (namesEl) {
-        namesEl.innerHTML = `${brideName} <span>♥</span> ${groomName}`.trim();
-      }
+      if (inviterEl) inviterEl.textContent = inviterName;
+      if (namesEl) namesEl.innerHTML = `${brideName} <span>♥</span> ${groomName}`.trim();
 
       if (messageEl && customMessage) {
         const messageParagraph = messageEl.querySelector('p') || document.createElement('p');
@@ -1382,20 +538,26 @@
       if (dateEl) {
         const hasDate = Boolean(weddingDate);
         dateEl.textContent = hasDate ? `${dateLabel} ${weddingDate}` : '';
-        dateEl.style.display = hasDate ? '' : 'none';
         dateEl.classList.toggle('wedding-card__date--hidden', !hasDate);
+        dateEl.closest('[data-step]')?.toggleAttribute('data-disabled', !hasDate);
       }
 
       if (locationEl && locationLabelEl) {
         if (locationUrl) {
           locationEl.href = locationUrl;
-          locationEl.style.display = '';
-          locationEl.classList.remove('wedding-card__button--hidden');
           locationLabelEl.textContent = locationLabel;
+          locationEl.classList.remove('wedding-card__button--hidden');
+          locationEl.closest('[data-step]')?.removeAttribute('data-disabled');
         } else {
-          locationEl.style.display = 'none';
           locationEl.classList.add('wedding-card__button--hidden');
+          locationEl.closest('[data-step]')?.setAttribute('data-disabled', 'true');
         }
+      }
+
+      if (!customMessage) {
+        messageEl?.closest('[data-step]')?.setAttribute('data-disabled', 'true');
+      } else {
+        messageEl?.closest('[data-step]')?.removeAttribute('data-disabled');
       }
     }
 
@@ -1415,32 +577,66 @@
     function startPetals() {
       window.clearInterval(petalInterval);
       petalsHost.innerHTML = '';
-
-      for (let i = 0; i < 20; i += 1) {
-        window.setTimeout(createPetal, i * 110);
-      }
-
       petalInterval = window.setInterval(() => {
         createPetal();
         if (Math.random() > 0.45) createPetal();
-      }, 180);
+      }, 190);
     }
 
-    function replayCssAnimation(element) {
-      if (!element) return;
-      element.style.animation = 'none';
-      void element.offsetWidth;
-      element.style.animation = '';
+    function clearStepTimers() {
+      while (stepTimers.length) {
+        window.clearTimeout(stepTimers.pop());
+      }
     }
 
-    function restartAnimations() {
-      root.querySelectorAll('.wedding-card__curtain, .wedding-card__character, .wedding-card__content').forEach(replayCssAnimation);
+    function getEnabledSteps() {
+      return stepEls.filter((step) => !step.hasAttribute('data-disabled'));
+    }
+
+    function showStep(enabledSteps, index) {
+      enabledSteps.forEach((step) => step.classList.remove('is-active'));
+      enabledSteps[index]?.classList.add('is-active');
+    }
+
+    function runStepSequence() {
+      clearStepTimers();
+      const enabledSteps = getEnabledSteps();
+      if (!enabledSteps.length) return;
+
+      showStep(enabledSteps, 0);
+      enabledSteps.slice(1).forEach((_, index) => {
+        const timer = window.setTimeout(() => {
+          showStep(enabledSteps, index + 1);
+        }, (index + 1) * stepDuration);
+        stepTimers.push(timer);
+      });
+    }
+
+    function openInvitation() {
+      intro?.classList.add('is-hidden');
+      root.classList.remove('is-open');
+      root.classList.add('is-opening');
+
+      window.setTimeout(() => {
+        root.classList.remove('is-opening');
+        root.classList.add('is-open');
+        runStepSequence();
+        startPetals();
+      }, curtainOpenDuration);
+    }
+
+    function replayAnimations() {
+      runStepSequence();
       startPetals();
     }
 
     hydrateFromUrl();
-    replayButton?.addEventListener('click', restartAnimations);
-    startPetals();
+    scene?.setAttribute('aria-hidden', 'true');
+    openButton?.addEventListener('click', () => {
+      scene?.setAttribute('aria-hidden', 'false');
+      openInvitation();
+    });
+    replayButton?.addEventListener('click', replayAnimations);
   })();
 </script>
 
@@ -1450,6 +646,18 @@
   "tag": "section",
   "class": "section section-premium-wedding-card",
   "settings": [
+    {
+      "type": "text",
+      "id": "inviter_name",
+      "label": "Inviter name",
+      "default": "Saurabh"
+    },
+    {
+      "type": "text",
+      "id": "open_button_label",
+      "label": "Open button label",
+      "default": "Open Invitation"
+    },
     {
       "type": "text",
       "id": "eyebrow",
@@ -1475,108 +683,7 @@
       "default": "<p>Together forever, with love that grows more graceful and beautiful every day.</p>"
     },
     {
-      "type": "text",
-      "id": "date_label",
-      "label": "Date label",
-      "default": "Wedding Date:"
-    },
-    {
-      "type": "text",
-      "id": "wedding_date",
-      "label": "Wedding date",
-      "default": "18 March 2026"
-    },
-    {
-      "type": "url",
-      "id": "location_url",
-      "label": "Location URL"
-    },
-    {
-      "type": "text",
-      "id": "location_label",
-      "label": "Location button label",
-      "default": "View Location"
-    },
-    {
-      "type": "text",
-      "id": "footer_text",
-      "label": "Footer text",
-      "default": "Made with love for your special day"
-    },
-    {
-      "type": "image_picker",
-      "id": "bride_image",
-      "label": "Bride image"
-    },
-    {
-      "type": "image_picker",
-      "id": "groom_image",
-      "label": "Groom image"
-    },
-    {
-      "type": "header",
-      "content": "Colors"
-    },
-    {
-      "type": "color",
-      "id": "background_top",
-      "label": "Background top",
-      "default": "#180008"
-    },
-    {
-      "type": "color",
-      "id": "background_mid",
-      "label": "Background middle",
-      "default": "#2c0010"
-    },
-    {
-      "type": "color",
-      "id": "background_bottom",
-      "label": "Background bottom",
-      "default": "#090004"
-    },
-    {
-      "type": "color",
-      "id": "curtain_color",
-      "label": "Curtain color",
-      "default": "#7b001f"
-    },
-    {
-      "type": "color",
-      "id": "curtain_shadow_color",
-      "label": "Curtain shadow color",
-      "default": "#3d000f"
-    },
-    {
-      "type": "color",
-      "id": "card_background",
-      "label": "Card background",
-      "default": "#ffffff"
-    },
-    {
-      "type": "color",
-      "id": "card_border",
-      "label": "Card border",
-      "default": "#fdf1ea"
-    },
-    {
-      "type": "color",
-      "id": "accent_color",
-      "label": "Accent color",
-      "default": "#9c0039"
-    },
-    {
-      "type": "color",
-      "id": "accent_strong_color",
-      "label": "Accent strong color",
-      "default": "#e8b84d"
-    },
-    {
-      "type": "color",
-      "id": "petal_color_start",
-      "label": "Petal color start",
-      "default": "#ffd6e5"
-    },
+@@ -778,2279 +788,26 @@
     {
       "type": "color",
       "id": "petal_color_end",
@@ -1603,1454 +710,3 @@
   ]
 }
 {% endschema %}
-
-this is my shopify section i want to change some animation
-
-can we make it more interactive like on first screen we will add saurabh invites you to a wedding
-Open Invitation button
-then we will show the invitation with all responsive animation, we can show in multiple phases
-like in first animation we will show both name then in new animation date, then custom message then in last screen location url to open<section
-  id="wedding-card-{{ section.id }}"
-  class="wedding-card-section wedding-card-section--{{ section.id }}"
-  data-bride-name="{{ section.settings.bride_name | escape }}"
-  data-groom-name="{{ section.settings.groom_name | escape }}"
-  data-date-label="{{ section.settings.date_label | escape }}"
-  data-wedding-date="{{ section.settings.wedding_date | escape }}"
-  data-location-label="{{ section.settings.location_label | escape }}"
-  data-location-url="{{ section.settings.location_url | escape }}"
->
-  <div class="wedding-card__curtains" aria-hidden="true">
-    <div class="wedding-card__curtain wedding-card__curtain--left"></div>
-    <div class="wedding-card__curtain wedding-card__curtain--right"></div>
-  </div>
-
-  <div class="wedding-card__scene">
-    <div class="wedding-card__backdrop" aria-hidden="true"></div>
-    <div class="wedding-card__spotlight" aria-hidden="true"></div>
-    <div class="wedding-card__stage" aria-hidden="true"></div>
-    <div class="wedding-card__petals" data-petals></div>
-
-    <div class="wedding-card__characters" aria-hidden="true">
-      <div class="wedding-card__character wedding-card__character--bride">
-        {% if section.settings.bride_image != blank %}
-          {{ section.settings.bride_image | image_url: width: 900 | image_tag: loading: 'lazy', class: 'wedding-card__character-image', alt: section.settings.bride_name | escape }}
-        {% else %}
-          <div class="wedding-card__character-placeholder">Bride</div>
-        {% endif %}
-      </div>
-      <div class="wedding-card__character wedding-card__character--groom">
-        {% if section.settings.groom_image != blank %}
-          {{ section.settings.groom_image | image_url: width: 900 | image_tag: loading: 'lazy', class: 'wedding-card__character-image', alt: section.settings.groom_name | escape }}
-        {% else %}
-          <div class="wedding-card__character-placeholder">Groom</div>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="wedding-card__content">
-      {% if section.settings.eyebrow != blank %}
-        <p class="wedding-card__eyebrow">{{ section.settings.eyebrow }}</p>
-      {% endif %}
-
-      <h2 class="wedding-card__title" data-names>{{ section.settings.bride_name }} <span>♥</span> {{ section.settings.groom_name }}</h2>
-      <div class="wedding-card__divider"></div>
-
-      <div class="wedding-card__message" data-message>
-        {% if section.settings.message != blank %}
-          {{ section.settings.message }}
-        {% else %}
-          <p></p>
-        {% endif %}
-      </div>
-
-      <p class="wedding-card__date{% if section.settings.wedding_date == blank %} wedding-card__date--hidden{% endif %}" data-date>{{ section.settings.date_label }} {{ section.settings.wedding_date }}</p>
-
-      <div class="wedding-card__actions">
-        <a class="wedding-card__button wedding-card__button--primary{% if section.settings.location_url == blank %} wedding-card__button--hidden{% endif %}" href="{{ section.settings.location_url }}" target="_blank" rel="noopener noreferrer" data-location>
-          📍 <span data-location-label>{{ section.settings.location_label }}</span>
-        </a>
-
-        <button class="wedding-card__button wedding-card__button--ghost" type="button" data-replay>
-          Replay Animation
-        </button>
-      </div>
-
-      {% if section.settings.footer_text != blank %}
-        <p class="wedding-card__footer">{{ section.settings.footer_text }}</p>
-      {% endif %}
-    </div>
-  </div>
-</section>
-
-<style>
-  #wedding-card-{{ section.id }} {
-    --card-bg: {{ section.settings.card_background }};
-    --card-border: {{ section.settings.card_border }};
-    --accent: {{ section.settings.accent_color }};
-    --accent-strong: {{ section.settings.accent_strong_color }};
-    --petal-start: {{ section.settings.petal_color_start }};
-    --petal-end: {{ section.settings.petal_color_end }};
-    --text-main: {{ section.settings.text_color }};
-    --text-soft: {{ section.settings.text_soft_color }};
-    --curtain-base: {{ section.settings.curtain_color }};
-    --curtain-shadow: {{ section.settings.curtain_shadow_color }};
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 10000;
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100svh;
-    overflow: hidden;
-    isolation: isolate;
-    color: var(--text-main);
-    background:
-      radial-gradient(circle at top, rgba(255, 198, 214, 0.16), transparent 24%),
-      radial-gradient(circle at bottom, rgba(255, 218, 138, 0.18), transparent 26%),
-      linear-gradient(180deg, {{ section.settings.background_top }} 0%, {{ section.settings.background_mid }} 48%, {{ section.settings.background_bottom }} 100%);
-  }
-
-  #wedding-card-{{ section.id }} *,
-  #wedding-card-{{ section.id }} *::before,
-  #wedding-card-{{ section.id }} *::after {
-    box-sizing: border-box;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__scene {
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100svh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: clamp(20px, 3vw, 40px);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__backdrop,
-  #wedding-card-{{ section.id }} .wedding-card__spotlight,
-  #wedding-card-{{ section.id }} .wedding-card__stage,
-  #wedding-card-{{ section.id }} .wedding-card__petals,
-  #wedding-card-{{ section.id }} .wedding-card__characters,
-  #wedding-card-{{ section.id }} .wedding-card__curtains {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::before,
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(20px);
-    opacity: 0.55;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::before {
-    width: min(40vw, 420px);
-    height: min(40vw, 420px);
-    top: 10%;
-    left: 8%;
-    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 68%);
-    animation: wedding-card-float-{{ section.id }} 9s ease-in-out infinite alternate;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::after {
-    width: min(34vw, 360px);
-    height: min(34vw, 360px);
-    right: 8%;
-    top: 12%;
-    background: radial-gradient(circle, rgba(255, 206, 153, 0.22), transparent 70%);
-    animation: wedding-card-float-{{ section.id }} 11s ease-in-out infinite alternate-reverse;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain {
-    position: absolute;
-    top: 0;
-    width: 50.5%;
-    height: 100%;
-    background:
-      linear-gradient(90deg, color-mix(in srgb, var(--curtain-base) 74%, #180005 26%), var(--curtain-base) 40%, color-mix(in srgb, var(--curtain-shadow) 72%, #000 28%)),
-      repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0 16px, rgba(0,0,0,0.08) 16px 32px);
-    box-shadow: inset -12px 0 28px rgba(0, 0, 0, 0.35);
-    animation-duration: 2.4s;
-    animation-delay: .25s;
-    animation-fill-mode: forwards;
-    animation-timing-function: cubic-bezier(.77, 0, .18, 1);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent 24%, transparent 74%, rgba(0,0,0,0.22));
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain--left {
-    left: 0;
-    animation-name: wedding-card-open-left-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain--right {
-    right: 0;
-    box-shadow: inset 12px 0 28px rgba(0, 0, 0, 0.35);
-    animation-name: wedding-card-open-right-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__spotlight {
-    inset: auto 50% 18%;
-    width: min(90vw, 980px);
-    height: min(72vh, 720px);
-    transform: translateX(-50%);
-    background:
-      radial-gradient(circle at center, rgba(255, 236, 194, 0.28), rgba(255, 236, 194, 0.1) 28%, transparent 62%);
-    filter: blur(4px);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__spotlight::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: -16%;
-    width: 62%;
-    height: 78%;
-    transform: translateX(-50%);
-    background: linear-gradient(180deg, rgba(255, 250, 230, 0.32), transparent 74%);
-    clip-path: polygon(47% 0, 53% 0, 100% 100%, 0 100%);
-    filter: blur(12px);
-    opacity: .9;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__stage {
-    inset: auto 50% 0;
-    width: min(1000px, 92vw);
-    height: 30vh;
-    transform: translateX(-50%);
-    background: radial-gradient(circle at center, rgba(255, 220, 168, 0.38), rgba(255, 220, 168, 0.08) 35%, transparent 74%);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__petal {
-    position: absolute;
-    top: -12vh;
-    left: var(--left);
-    width: var(--size);
-    height: calc(var(--size) * .74);
-    border-radius: 70% 0 70% 0;
-    opacity: 0;
-    background:
-      radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.18) 24%, transparent 38%),
-      linear-gradient(135deg, var(--petal-start), var(--petal-end));
-    box-shadow: 0 0 16px rgba(255, 96, 149, 0.2);
-    animation: wedding-card-petal-fall-{{ section.id }} var(--duration) linear forwards;
-    animation-delay: var(--delay);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__characters {
-    inset: auto 0 0;
-    height: min(58vh, 600px);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character {
-    position: absolute;
-    bottom: 0;
-    width: clamp(180px, 22vw, 300px);
-    aspect-ratio: 0.66;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    filter: drop-shadow(0 26px 36px rgba(0,0,0,.38));
-    animation-duration: 2.35s;
-    animation-delay: 1.05s;
-    animation-fill-mode: forwards;
-    animation-timing-function: cubic-bezier(.2, .8, .2, 1);
-    opacity: 0;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: 2%;
-    width: 76%;
-    height: 12%;
-    transform: translateX(-50%);
-    background: radial-gradient(circle, rgba(0,0,0,.38), transparent 70%);
-    filter: blur(10px);
-    z-index: -1;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character--bride {
-    left: clamp(4%, 8vw, 15%);
-    transform: translateX(-80vw) scale(.92);
-    animation-name: wedding-card-bride-in-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character--groom {
-    right: clamp(4%, 8vw, 15%);
-    transform: translateX(80vw) scale(.92);
-    animation-name: wedding-card-groom-in-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character-image,
-  #wedding-card-{{ section.id }} .wedding-card__character-placeholder {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center bottom;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 28px;
-    border: 1px dashed rgba(255,255,255,.28);
-    background: rgba(255,255,255,.08);
-    color: var(--text-soft);
-    font-size: 1.1rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__content {
-    position: relative;
-    z-index: 2;
-    width: min(560px, 92vw);
-    margin: 0 auto;
-    padding: clamp(28px, 3.5vw, 42px);
-    border-radius: 32px;
-    text-align: center;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 88%, #fff 12%), color-mix(in srgb, var(--card-bg) 94%, transparent 6%));
-    border: 1px solid var(--card-border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 24px 70px rgba(0,0,0,.35);
-    animation: wedding-card-content-in-{{ section.id }} 1.1s 3s both cubic-bezier(.2, .8, .2, 1);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__eyebrow {
-    margin: 0 auto 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 16px;
-    border-radius: 999px;
-    background: rgba(255, 215, 162, .1);
-    color: var(--accent);
-    border: 1px solid rgba(255,255,255,.12);
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    font-size: .72rem;
-    font-weight: 600;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__title {
-    margin: 0;
-    font-size: clamp(2.6rem, 6vw, 4.8rem);
-    line-height: .94;
-    color: var(--text-main);
-    font-family: Georgia, "Times New Roman", serif;
-    text-shadow: 0 0 20px rgba(255, 228, 174, .18);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__title span {
-    color: var(--accent);
-    font-size: .82em;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__divider {
-    width: 120px;
-    height: 1px;
-    margin: 18px auto 22px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    position: relative;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__divider::after {
-    content: "◆";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 0 10px;
-    color: var(--accent);
-    background: transparent;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__message {
-    color: var(--text-soft);
-    font-size: clamp(1rem, 2vw, 1.1rem);
-    line-height: 1.8;
-    margin: 0 auto 14px;
-    max-width: 34ch;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__message p {
-    margin: 0;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__date {
-    margin: 0 0 24px;
-    font-size: .92rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--text-main) 72%, transparent 28%);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__actions {
-    display: flex;
-    justify-content: center;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button {
-    appearance: none;
-    border: 0;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 190px;
-    padding: 14px 22px;
-    border-radius: 999px;
-    text-decoration: none;
-    font-size: .95rem;
-    font-weight: 600;
-    transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button:hover {
-    transform: translateY(-3px) scale(1.015);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button--hidden,
-  #wedding-card-{{ section.id }} .wedding-card__date--hidden {
-    display: none;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button--primary {
-    color: #2d0d12;
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    box-shadow: 0 14px 30px rgba(255, 203, 116, .26);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button--ghost {
-    color: var(--text-main);
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.12);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__footer {
-    margin: 22px 0 0;
-    color: color-mix(in srgb, var(--text-main) 60%, transparent 40%);
-    font-size: .82rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-  }
-
-  @keyframes wedding-card-open-left-{{ section.id }} {
-    to { transform: translateX(-108%); }
-  }
-
-  @keyframes wedding-card-open-right-{{ section.id }} {
-    to { transform: translateX(108%); }
-  }
-
-  @keyframes wedding-card-bride-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateX(-80vw) scale(.92); }
-    70% { opacity: 1; }
-    100% { opacity: 1; transform: translateX(min(16vw, 120px)) scale(1); }
-  }
-
-  @keyframes wedding-card-groom-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateX(80vw) scale(.92); }
-    70% { opacity: 1; }
-    100% { opacity: 1; transform: translateX(max(-16vw, -120px)) scale(1); }
-  }
-
-  @keyframes wedding-card-content-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateY(40px) scale(.96); filter: blur(10px); }
-    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-  }
-
-  @keyframes wedding-card-petal-fall-{{ section.id }} {
-    0% {
-      opacity: 0;
-      transform: translate3d(0, -8vh, 0) rotate(0deg) scale(.86);
-    }
-    10% {
-      opacity: .92;
-    }
-    50% {
-      transform: translate3d(calc(var(--drift) * .55), 50vh, 0) rotate(calc(var(--spin) * .55)) scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: translate3d(var(--drift), 118vh, 0) rotate(var(--spin)) scale(1.08);
-    }
-  }
-
-  @keyframes wedding-card-float-{{ section.id }} {
-    from { transform: translate3d(0, 0, 0) scale(1); }
-    to { transform: translate3d(18px, -22px, 0) scale(1.06); }
-  }
-
-  @media screen and (max-width: 989px) {
-    #wedding-card-{{ section.id }} .wedding-card__characters {
-      height: min(48vh, 480px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character {
-      width: clamp(150px, 28vw, 240px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character--bride {
-      left: 2%;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character--groom {
-      right: 2%;
-    }
-  }
-
-  @media screen and (max-width: 749px) {
-    #wedding-card-{{ section.id }} .wedding-card__scene {
-      align-items: flex-start;
-      padding-top: 40px;
-      padding-bottom: 180px;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__content {
-      width: min(94vw, 480px);
-      padding: 26px 18px;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__characters {
-      height: min(38vh, 330px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character {
-      width: clamp(120px, 32vw, 180px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__actions {
-      flex-direction: column;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__button {
-      width: 100%;
-    }
-  }
-</style>
-
-<script>
-  (() => {
-    const root = document.getElementById('wedding-card-{{ section.id }}');
-    if (!root) return;
-
-    const petalsHost = root.querySelector('[data-petals]');
-    const replayButton = root.querySelector('[data-replay]');
-    const namesEl = root.querySelector('[data-names]');
-    const messageEl = root.querySelector('[data-message]');
-    const dateEl = root.querySelector('[data-date]');
-    const locationEl = root.querySelector('[data-location]');
-    const locationLabelEl = root.querySelector('[data-location-label]');
-    const params = new URLSearchParams(window.location.search);
-    let petalInterval;
-
-    function decodeMessage(value) {
-      if (!value) return '';
-      try {
-        return window.atob(value);
-      } catch (error) {
-        return value;
-      }
-    }
-
-    function hydrateFromUrl() {
-      const brideName = params.get('b') || root.dataset.brideName || '';
-      const groomName = params.get('g') || root.dataset.groomName || '';
-      const weddingDate = params.get('d') || root.dataset.weddingDate || '';
-      const dateLabel = root.dataset.dateLabel || 'Wedding Date:';
-      const locationUrl = params.get('l') || root.dataset.locationUrl || '';
-      const locationLabel = params.get('ll') || root.dataset.locationLabel || 'View Location';
-      const customMessage = decodeMessage(params.get('m')) || messageEl?.textContent?.trim() || '';
-
-      if (namesEl) {
-        namesEl.innerHTML = `${brideName} <span>♥</span> ${groomName}`.trim();
-      }
-
-      if (messageEl && customMessage) {
-        const messageParagraph = messageEl.querySelector('p') || document.createElement('p');
-        messageParagraph.textContent = customMessage;
-        if (!messageParagraph.parentNode) messageEl.appendChild(messageParagraph);
-      }
-
-      if (dateEl) {
-        const hasDate = Boolean(weddingDate);
-        dateEl.textContent = hasDate ? `${dateLabel} ${weddingDate}` : '';
-        dateEl.style.display = hasDate ? '' : 'none';
-        dateEl.classList.toggle('wedding-card__date--hidden', !hasDate);
-      }
-
-      if (locationEl && locationLabelEl) {
-        if (locationUrl) {
-          locationEl.href = locationUrl;
-          locationEl.style.display = '';
-          locationEl.classList.remove('wedding-card__button--hidden');
-          locationLabelEl.textContent = locationLabel;
-        } else {
-          locationEl.style.display = 'none';
-          locationEl.classList.add('wedding-card__button--hidden');
-        }
-      }
-    }
-
-    function createPetal() {
-      const petal = document.createElement('span');
-      petal.className = 'wedding-card__petal';
-      petal.style.setProperty('--left', `${Math.random() * 100}%`);
-      petal.style.setProperty('--size', `${12 + Math.random() * 16}px`);
-      petal.style.setProperty('--duration', `${5.2 + Math.random() * 2.8}s`);
-      petal.style.setProperty('--delay', `${Math.random() * 0.4}s`);
-      petal.style.setProperty('--drift', `${-160 + Math.random() * 320}px`);
-      petal.style.setProperty('--spin', `${-220 + Math.random() * 440}deg`);
-      petalsHost.appendChild(petal);
-      window.setTimeout(() => petal.remove(), 9000);
-    }
-
-    function startPetals() {
-      window.clearInterval(petalInterval);
-      petalsHost.innerHTML = '';
-
-      for (let i = 0; i < 20; i += 1) {
-        window.setTimeout(createPetal, i * 110);
-      }
-
-      petalInterval = window.setInterval(() => {
-        createPetal();
-        if (Math.random() > 0.45) createPetal();
-      }, 180);
-    }
-
-    function replayCssAnimation(element) {
-      if (!element) return;
-      element.style.animation = 'none';
-      void element.offsetWidth;
-      element.style.animation = '';
-    }
-
-    function restartAnimations() {
-      root.querySelectorAll('.wedding-card__curtain, .wedding-card__character, .wedding-card__content').forEach(replayCssAnimation);
-      startPetals();
-    }
-
-    hydrateFromUrl();
-    replayButton?.addEventListener('click', restartAnimations);
-    startPetals();
-  })();
-</script>
-
-{% schema %}
-{
-  "name": "Premium wedding card",
-  "tag": "section",
-  "class": "section section-premium-wedding-card",
-  "settings": [
-    {
-      "type": "text",
-      "id": "eyebrow",
-      "label": "Eyebrow text",
-      "default": "A New Chapter Begins"
-    },
-    {
-      "type": "text",
-      "id": "bride_name",
-      "label": "Bride name",
-      "default": "Aarohi"
-    },
-    {
-      "type": "text",
-      "id": "groom_name",
-      "label": "Groom name",
-      "default": "Vivaan"
-    },
-    {
-      "type": "richtext",
-      "id": "message",
-      "label": "Message",
-      "default": "<p>Together forever, with love that grows more graceful and beautiful every day.</p>"
-    },
-    {
-      "type": "text",
-      "id": "date_label",
-      "label": "Date label",
-      "default": "Wedding Date:"
-    },
-    {
-      "type": "text",
-      "id": "wedding_date",
-      "label": "Wedding date",
-      "default": "18 March 2026"
-    },
-    {
-      "type": "url",
-      "id": "location_url",
-      "label": "Location URL"
-    },
-    {
-      "type": "text",
-      "id": "location_label",
-      "label": "Location button label",
-      "default": "View Location"
-    },
-    {
-      "type": "text",
-      "id": "footer_text",
-      "label": "Footer text",
-      "default": "Made with love for your special day"
-    },
-    {
-      "type": "image_picker",
-      "id": "bride_image",
-      "label": "Bride image"
-    },
-    {
-      "type": "image_picker",
-      "id": "groom_image",
-      "label": "Groom image"
-    },
-    {
-      "type": "header",
-      "content": "Colors"
-    },
-    {
-      "type": "color",
-      "id": "background_top",
-      "label": "Background top",
-      "default": "#180008"
-    },
-    {
-      "type": "color",
-      "id": "background_mid",
-      "label": "Background middle",
-      "default": "#2c0010"
-    },
-    {
-      "type": "color",
-      "id": "background_bottom",
-      "label": "Background bottom",
-      "default": "#090004"
-    },
-    {
-      "type": "color",
-      "id": "curtain_color",
-      "label": "Curtain color",
-      "default": "#7b001f"
-    },
-    {
-      "type": "color",
-      "id": "curtain_shadow_color",
-      "label": "Curtain shadow color",
-      "default": "#3d000f"
-    },
-    {
-      "type": "color",
-      "id": "card_background",
-      "label": "Card background",
-      "default": "#ffffff"
-    },
-    {
-      "type": "color",
-      "id": "card_border",
-      "label": "Card border",
-      "default": "#fdf1ea"
-    },
-    {
-      "type": "color",
-      "id": "accent_color",
-      "label": "Accent color",
-      "default": "#9c0039"
-    },
-    {
-      "type": "color",
-      "id": "accent_strong_color",
-      "label": "Accent strong color",
-      "default": "#e8b84d"
-    },
-    {
-      "type": "color",
-      "id": "petal_color_start",
-      "label": "Petal color start",
-      "default": "#ffd6e5"
-    },
-    {
-      "type": "color",
-      "id": "petal_color_end",
-      "label": "Petal color end",
-      "default": "#ee5b95"
-    },
-    {
-      "type": "color",
-      "id": "text_color",
-      "label": "Text color",
-      "default": "#9c0039"
-    },
-    {
-      "type": "color",
-      "id": "text_soft_color",
-      "label": "Soft text color",
-      "default": "#9c0039"
-    }
-  ],
-  "presets": [
-    {
-      "name": "Premium wedding card"
-    }
-  ]
-}
-{% endschema %}<section
-  id="wedding-card-{{ section.id }}"
-  class="wedding-card-section wedding-card-section--{{ section.id }}"
-  data-bride-name="{{ section.settings.bride_name | escape }}"
-  data-groom-name="{{ section.settings.groom_name | escape }}"
-  data-date-label="{{ section.settings.date_label | escape }}"
-  data-wedding-date="{{ section.settings.wedding_date | escape }}"
-  data-location-label="{{ section.settings.location_label | escape }}"
-  data-location-url="{{ section.settings.location_url | escape }}"
->
-  <div class="wedding-card__curtains" aria-hidden="true">
-    <div class="wedding-card__curtain wedding-card__curtain--left"></div>
-    <div class="wedding-card__curtain wedding-card__curtain--right"></div>
-  </div>
-
-  <div class="wedding-card__scene">
-    <div class="wedding-card__backdrop" aria-hidden="true"></div>
-    <div class="wedding-card__spotlight" aria-hidden="true"></div>
-    <div class="wedding-card__stage" aria-hidden="true"></div>
-    <div class="wedding-card__petals" data-petals></div>
-
-    <div class="wedding-card__characters" aria-hidden="true">
-      <div class="wedding-card__character wedding-card__character--bride">
-        {% if section.settings.bride_image != blank %}
-          {{ section.settings.bride_image | image_url: width: 900 | image_tag: loading: 'lazy', class: 'wedding-card__character-image', alt: section.settings.bride_name | escape }}
-        {% else %}
-          <div class="wedding-card__character-placeholder">Bride</div>
-        {% endif %}
-      </div>
-      <div class="wedding-card__character wedding-card__character--groom">
-        {% if section.settings.groom_image != blank %}
-          {{ section.settings.groom_image | image_url: width: 900 | image_tag: loading: 'lazy', class: 'wedding-card__character-image', alt: section.settings.groom_name | escape }}
-        {% else %}
-          <div class="wedding-card__character-placeholder">Groom</div>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="wedding-card__content">
-      {% if section.settings.eyebrow != blank %}
-        <p class="wedding-card__eyebrow">{{ section.settings.eyebrow }}</p>
-      {% endif %}
-
-      <h2 class="wedding-card__title" data-names>{{ section.settings.bride_name }} <span>♥</span> {{ section.settings.groom_name }}</h2>
-      <div class="wedding-card__divider"></div>
-
-      <div class="wedding-card__message" data-message>
-        {% if section.settings.message != blank %}
-          {{ section.settings.message }}
-        {% else %}
-          <p></p>
-        {% endif %}
-      </div>
-
-      <p class="wedding-card__date{% if section.settings.wedding_date == blank %} wedding-card__date--hidden{% endif %}" data-date>{{ section.settings.date_label }} {{ section.settings.wedding_date }}</p>
-
-      <div class="wedding-card__actions">
-        <a class="wedding-card__button wedding-card__button--primary{% if section.settings.location_url == blank %} wedding-card__button--hidden{% endif %}" href="{{ section.settings.location_url }}" target="_blank" rel="noopener noreferrer" data-location>
-          📍 <span data-location-label>{{ section.settings.location_label }}</span>
-        </a>
-
-        <button class="wedding-card__button wedding-card__button--ghost" type="button" data-replay>
-          Replay Animation
-        </button>
-      </div>
-
-      {% if section.settings.footer_text != blank %}
-        <p class="wedding-card__footer">{{ section.settings.footer_text }}</p>
-      {% endif %}
-    </div>
-  </div>
-</section>
-
-<style>
-  #wedding-card-{{ section.id }} {
-    --card-bg: {{ section.settings.card_background }};
-    --card-border: {{ section.settings.card_border }};
-    --accent: {{ section.settings.accent_color }};
-    --accent-strong: {{ section.settings.accent_strong_color }};
-    --petal-start: {{ section.settings.petal_color_start }};
-    --petal-end: {{ section.settings.petal_color_end }};
-    --text-main: {{ section.settings.text_color }};
-    --text-soft: {{ section.settings.text_soft_color }};
-    --curtain-base: {{ section.settings.curtain_color }};
-    --curtain-shadow: {{ section.settings.curtain_shadow_color }};
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 10000;
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100svh;
-    overflow: hidden;
-    isolation: isolate;
-    color: var(--text-main);
-    background:
-      radial-gradient(circle at top, rgba(255, 198, 214, 0.16), transparent 24%),
-      radial-gradient(circle at bottom, rgba(255, 218, 138, 0.18), transparent 26%),
-      linear-gradient(180deg, {{ section.settings.background_top }} 0%, {{ section.settings.background_mid }} 48%, {{ section.settings.background_bottom }} 100%);
-  }
-
-  #wedding-card-{{ section.id }} *,
-  #wedding-card-{{ section.id }} *::before,
-  #wedding-card-{{ section.id }} *::after {
-    box-sizing: border-box;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__scene {
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100svh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: clamp(20px, 3vw, 40px);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__backdrop,
-  #wedding-card-{{ section.id }} .wedding-card__spotlight,
-  #wedding-card-{{ section.id }} .wedding-card__stage,
-  #wedding-card-{{ section.id }} .wedding-card__petals,
-  #wedding-card-{{ section.id }} .wedding-card__characters,
-  #wedding-card-{{ section.id }} .wedding-card__curtains {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::before,
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(20px);
-    opacity: 0.55;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::before {
-    width: min(40vw, 420px);
-    height: min(40vw, 420px);
-    top: 10%;
-    left: 8%;
-    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 68%);
-    animation: wedding-card-float-{{ section.id }} 9s ease-in-out infinite alternate;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__backdrop::after {
-    width: min(34vw, 360px);
-    height: min(34vw, 360px);
-    right: 8%;
-    top: 12%;
-    background: radial-gradient(circle, rgba(255, 206, 153, 0.22), transparent 70%);
-    animation: wedding-card-float-{{ section.id }} 11s ease-in-out infinite alternate-reverse;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain {
-    position: absolute;
-    top: 0;
-    width: 50.5%;
-    height: 100%;
-    background:
-      linear-gradient(90deg, color-mix(in srgb, var(--curtain-base) 74%, #180005 26%), var(--curtain-base) 40%, color-mix(in srgb, var(--curtain-shadow) 72%, #000 28%)),
-      repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0 16px, rgba(0,0,0,0.08) 16px 32px);
-    box-shadow: inset -12px 0 28px rgba(0, 0, 0, 0.35);
-    animation-duration: 2.4s;
-    animation-delay: .25s;
-    animation-fill-mode: forwards;
-    animation-timing-function: cubic-bezier(.77, 0, .18, 1);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent 24%, transparent 74%, rgba(0,0,0,0.22));
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain--left {
-    left: 0;
-    animation-name: wedding-card-open-left-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__curtain--right {
-    right: 0;
-    box-shadow: inset 12px 0 28px rgba(0, 0, 0, 0.35);
-    animation-name: wedding-card-open-right-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__spotlight {
-    inset: auto 50% 18%;
-    width: min(90vw, 980px);
-    height: min(72vh, 720px);
-    transform: translateX(-50%);
-    background:
-      radial-gradient(circle at center, rgba(255, 236, 194, 0.28), rgba(255, 236, 194, 0.1) 28%, transparent 62%);
-    filter: blur(4px);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__spotlight::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: -16%;
-    width: 62%;
-    height: 78%;
-    transform: translateX(-50%);
-    background: linear-gradient(180deg, rgba(255, 250, 230, 0.32), transparent 74%);
-    clip-path: polygon(47% 0, 53% 0, 100% 100%, 0 100%);
-    filter: blur(12px);
-    opacity: .9;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__stage {
-    inset: auto 50% 0;
-    width: min(1000px, 92vw);
-    height: 30vh;
-    transform: translateX(-50%);
-    background: radial-gradient(circle at center, rgba(255, 220, 168, 0.38), rgba(255, 220, 168, 0.08) 35%, transparent 74%);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__petal {
-    position: absolute;
-    top: -12vh;
-    left: var(--left);
-    width: var(--size);
-    height: calc(var(--size) * .74);
-    border-radius: 70% 0 70% 0;
-    opacity: 0;
-    background:
-      radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.18) 24%, transparent 38%),
-      linear-gradient(135deg, var(--petal-start), var(--petal-end));
-    box-shadow: 0 0 16px rgba(255, 96, 149, 0.2);
-    animation: wedding-card-petal-fall-{{ section.id }} var(--duration) linear forwards;
-    animation-delay: var(--delay);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__characters {
-    inset: auto 0 0;
-    height: min(58vh, 600px);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character {
-    position: absolute;
-    bottom: 0;
-    width: clamp(180px, 22vw, 300px);
-    aspect-ratio: 0.66;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    filter: drop-shadow(0 26px 36px rgba(0,0,0,.38));
-    animation-duration: 2.35s;
-    animation-delay: 1.05s;
-    animation-fill-mode: forwards;
-    animation-timing-function: cubic-bezier(.2, .8, .2, 1);
-    opacity: 0;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: 2%;
-    width: 76%;
-    height: 12%;
-    transform: translateX(-50%);
-    background: radial-gradient(circle, rgba(0,0,0,.38), transparent 70%);
-    filter: blur(10px);
-    z-index: -1;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character--bride {
-    left: clamp(4%, 8vw, 15%);
-    transform: translateX(-80vw) scale(.92);
-    animation-name: wedding-card-bride-in-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character--groom {
-    right: clamp(4%, 8vw, 15%);
-    transform: translateX(80vw) scale(.92);
-    animation-name: wedding-card-groom-in-{{ section.id }};
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character-image,
-  #wedding-card-{{ section.id }} .wedding-card__character-placeholder {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center bottom;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__character-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 28px;
-    border: 1px dashed rgba(255,255,255,.28);
-    background: rgba(255,255,255,.08);
-    color: var(--text-soft);
-    font-size: 1.1rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__content {
-    position: relative;
-    z-index: 2;
-    width: min(560px, 92vw);
-    margin: 0 auto;
-    padding: clamp(28px, 3.5vw, 42px);
-    border-radius: 32px;
-    text-align: center;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 88%, #fff 12%), color-mix(in srgb, var(--card-bg) 94%, transparent 6%));
-    border: 1px solid var(--card-border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 24px 70px rgba(0,0,0,.35);
-    animation: wedding-card-content-in-{{ section.id }} 1.1s 3s both cubic-bezier(.2, .8, .2, 1);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__eyebrow {
-    margin: 0 auto 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 16px;
-    border-radius: 999px;
-    background: rgba(255, 215, 162, .1);
-    color: var(--accent);
-    border: 1px solid rgba(255,255,255,.12);
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    font-size: .72rem;
-    font-weight: 600;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__title {
-    margin: 0;
-    font-size: clamp(2.6rem, 6vw, 4.8rem);
-    line-height: .94;
-    color: var(--text-main);
-    font-family: Georgia, "Times New Roman", serif;
-    text-shadow: 0 0 20px rgba(255, 228, 174, .18);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__title span {
-    color: var(--accent);
-    font-size: .82em;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__divider {
-    width: 120px;
-    height: 1px;
-    margin: 18px auto 22px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    position: relative;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__divider::after {
-    content: "◆";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 0 10px;
-    color: var(--accent);
-    background: transparent;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__message {
-    color: var(--text-soft);
-    font-size: clamp(1rem, 2vw, 1.1rem);
-    line-height: 1.8;
-    margin: 0 auto 14px;
-    max-width: 34ch;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__message p {
-    margin: 0;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__date {
-    margin: 0 0 24px;
-    font-size: .92rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--text-main) 72%, transparent 28%);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__actions {
-    display: flex;
-    justify-content: center;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button {
-    appearance: none;
-    border: 0;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 190px;
-    padding: 14px 22px;
-    border-radius: 999px;
-    text-decoration: none;
-    font-size: .95rem;
-    font-weight: 600;
-    transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button:hover {
-    transform: translateY(-3px) scale(1.015);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button--hidden,
-  #wedding-card-{{ section.id }} .wedding-card__date--hidden {
-    display: none;
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button--primary {
-    color: #2d0d12;
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    box-shadow: 0 14px 30px rgba(255, 203, 116, .26);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__button--ghost {
-    color: var(--text-main);
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.12);
-  }
-
-  #wedding-card-{{ section.id }} .wedding-card__footer {
-    margin: 22px 0 0;
-    color: color-mix(in srgb, var(--text-main) 60%, transparent 40%);
-    font-size: .82rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-  }
-
-  @keyframes wedding-card-open-left-{{ section.id }} {
-    to { transform: translateX(-108%); }
-  }
-
-  @keyframes wedding-card-open-right-{{ section.id }} {
-    to { transform: translateX(108%); }
-  }
-
-  @keyframes wedding-card-bride-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateX(-80vw) scale(.92); }
-    70% { opacity: 1; }
-    100% { opacity: 1; transform: translateX(min(16vw, 120px)) scale(1); }
-  }
-
-  @keyframes wedding-card-groom-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateX(80vw) scale(.92); }
-    70% { opacity: 1; }
-    100% { opacity: 1; transform: translateX(max(-16vw, -120px)) scale(1); }
-  }
-
-  @keyframes wedding-card-content-in-{{ section.id }} {
-    0% { opacity: 0; transform: translateY(40px) scale(.96); filter: blur(10px); }
-    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-  }
-
-  @keyframes wedding-card-petal-fall-{{ section.id }} {
-    0% {
-      opacity: 0;
-      transform: translate3d(0, -8vh, 0) rotate(0deg) scale(.86);
-    }
-    10% {
-      opacity: .92;
-    }
-    50% {
-      transform: translate3d(calc(var(--drift) * .55), 50vh, 0) rotate(calc(var(--spin) * .55)) scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: translate3d(var(--drift), 118vh, 0) rotate(var(--spin)) scale(1.08);
-    }
-  }
-
-  @keyframes wedding-card-float-{{ section.id }} {
-    from { transform: translate3d(0, 0, 0) scale(1); }
-    to { transform: translate3d(18px, -22px, 0) scale(1.06); }
-  }
-
-  @media screen and (max-width: 989px) {
-    #wedding-card-{{ section.id }} .wedding-card__characters {
-      height: min(48vh, 480px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character {
-      width: clamp(150px, 28vw, 240px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character--bride {
-      left: 2%;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character--groom {
-      right: 2%;
-    }
-  }
-
-  @media screen and (max-width: 749px) {
-    #wedding-card-{{ section.id }} .wedding-card__scene {
-      align-items: flex-start;
-      padding-top: 40px;
-      padding-bottom: 180px;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__content {
-      width: min(94vw, 480px);
-      padding: 26px 18px;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__characters {
-      height: min(38vh, 330px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__character {
-      width: clamp(120px, 32vw, 180px);
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__actions {
-      flex-direction: column;
-    }
-
-    #wedding-card-{{ section.id }} .wedding-card__button {
-      width: 100%;
-    }
-  }
-</style>
-
-<script>
-  (() => {
-    const root = document.getElementById('wedding-card-{{ section.id }}');
-    if (!root) return;
-
-    const petalsHost = root.querySelector('[data-petals]');
-    const replayButton = root.querySelector('[data-replay]');
-    const namesEl = root.querySelector('[data-names]');
-    const messageEl = root.querySelector('[data-message]');
-    const dateEl = root.querySelector('[data-date]');
-    const locationEl = root.querySelector('[data-location]');
-    const locationLabelEl = root.querySelector('[data-location-label]');
-    const params = new URLSearchParams(window.location.search);
-    let petalInterval;
-
-    function decodeMessage(value) {
-      if (!value) return '';
-      try {
-        return window.atob(value);
-      } catch (error) {
-        return value;
-      }
-    }
-
-    function hydrateFromUrl() {
-      const brideName = params.get('b') || root.dataset.brideName || '';
-      const groomName = params.get('g') || root.dataset.groomName || '';
-      const weddingDate = params.get('d') || root.dataset.weddingDate || '';
-      const dateLabel = root.dataset.dateLabel || 'Wedding Date:';
-      const locationUrl = params.get('l') || root.dataset.locationUrl || '';
-      const locationLabel = params.get('ll') || root.dataset.locationLabel || 'View Location';
-      const customMessage = decodeMessage(params.get('m')) || messageEl?.textContent?.trim() || '';
-
-      if (namesEl) {
-        namesEl.innerHTML = `${brideName} <span>♥</span> ${groomName}`.trim();
-      }
-
-      if (messageEl && customMessage) {
-        const messageParagraph = messageEl.querySelector('p') || document.createElement('p');
-        messageParagraph.textContent = customMessage;
-        if (!messageParagraph.parentNode) messageEl.appendChild(messageParagraph);
-      }
-
-      if (dateEl) {
-        const hasDate = Boolean(weddingDate);
-        dateEl.textContent = hasDate ? `${dateLabel} ${weddingDate}` : '';
-        dateEl.style.display = hasDate ? '' : 'none';
-        dateEl.classList.toggle('wedding-card__date--hidden', !hasDate);
-      }
-
-      if (locationEl && locationLabelEl) {
-        if (locationUrl) {
-          locationEl.href = locationUrl;
-          locationEl.style.display = '';
-          locationEl.classList.remove('wedding-card__button--hidden');
-          locationLabelEl.textContent = locationLabel;
-        } else {
-          locationEl.style.display = 'none';
-          locationEl.classList.add('wedding-card__button--hidden');
-        }
-      }
-    }
-
-    function createPetal() {
-      const petal = document.createElement('span');
-      petal.className = 'wedding-card__petal';
-      petal.style.setProperty('--left', `${Math.random() * 100}%`);
-      petal.style.setProperty('--size', `${12 + Math.random() * 16}px`);
-      petal.style.setProperty('--duration', `${5.2 + Math.random() * 2.8}s`);
-      petal.style.setProperty('--delay', `${Math.random() * 0.4}s`);
-      petal.style.setProperty('--drift', `${-160 + Math.random() * 320}px`);
-      petal.style.setProperty('--spin', `${-220 + Math.random() * 440}deg`);
-      petalsHost.appendChild(petal);
-      window.setTimeout(() => petal.remove(), 9000);
-    }
-
-    function startPetals() {
-      window.clearInterval(petalInterval);
-      petalsHost.innerHTML = '';
-
-      for (let i = 0; i < 20; i += 1) {
-        window.setTimeout(createPetal, i * 110);
-      }
-
-      petalInterval = window.setInterval(() => {
-        createPetal();
-        if (Math.random() > 0.45) createPetal();
-      }, 180);
-    }
-
-    function replayCssAnimation(element) {
-      if (!element) return;
-      element.style.animation = 'none';
-      void element.offsetWidth;
-      element.style.animation = '';
-    }
-
-    function restartAnimations() {
-      root.querySelectorAll('.wedding-card__curtain, .wedding-card__character, .wedding-card__content').forEach(replayCssAnimation);
-      startPetals();
-    }
-
-    hydrateFromUrl();
-    replayButton?.addEventListener('click', restartAnimations);
-    startPetals();
-  })();
-</script>
