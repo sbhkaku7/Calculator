@@ -42,6 +42,9 @@
         {% endif %}
       </div>
     </div>
+    <div class="wedding-card__sequence" data-sequence aria-live="polite">
+      <p class="wedding-card__sequence-text" data-sequence-text></p>
+    </div>
 
     <div class="wedding-card__content" data-content>
       {% if section.settings.eyebrow != blank %}
@@ -275,6 +278,32 @@
     inset: auto 0 0;
     height: min(58vh, 600px);
   }
+  #wedding-card-{{ section.id }} .wedding-card__sequence {
+    position: absolute;
+    z-index: 3;
+    inset: 18% 5% auto;
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    pointer-events: none;
+    transition: opacity .45s ease;
+  }
+
+  #wedding-card-{{ section.id }} .wedding-card__sequence.is-hidden {
+    opacity: 0;
+  }
+
+  #wedding-card-{{ section.id }} .wedding-card__sequence-text {
+    margin: 0;
+    max-width: 24ch;
+    font-size: clamp(1.7rem, 5.2vw, 3.6rem);
+    font-weight: 700;
+    line-height: 1.18;
+    color: #fff9fd;
+    text-shadow: 0 8px 28px rgba(0,0,0,.78);
+    letter-spacing: .03em;
+  }
+
 
   #wedding-card-{{ section.id }} .wedding-card__character {
     position: absolute;
@@ -326,35 +355,46 @@
     padding: clamp(28px, 3.5vw, 42px);
     border-radius: 32px;
     text-align: center;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 88%, #fff 12%), color-mix(in srgb, var(--card-bg) 94%, transparent 6%));
-    border: 1px solid var(--card-border);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 72%, #050205 28%), color-mix(in srgb, var(--card-bg) 84%, #090307 16%));
+    border: 1px solid color-mix(in srgb, var(--card-border) 62%, #fff 38%);
     backdrop-filter: blur(20px);
     box-shadow: 0 24px 70px rgba(0,0,0,.35);
+    color: #fff7fb;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity .5s ease, transform .5s ease;
+    pointer-events: none;
+  }
+
+  #wedding-card-{{ section.id }} .wedding-card__content.is-ready {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
   }
 
   #wedding-card-{{ section.id }} .wedding-card__stepper {
-    position: relative;
-    min-height: 180px;
+    display: grid;
+    gap: 14px;
+    min-height: 220px;
     margin-bottom: 12px;
   }
 
   #wedding-card-{{ section.id }} .wedding-card__step {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
+    display: none;
     opacity: 0;
-    visibility: hidden;
-    transform: translateY(18px) scale(.98);
-    transition: opacity .65s ease, transform .65s ease, visibility .65s ease;
-    pointer-events: none;
+    transform: translateY(12px);
+    transition: opacity .55s ease, transform .55s ease;
+  }
+
+  #wedding-card-{{ section.id }} .wedding-card__step.is-visible {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
   }
 
   #wedding-card-{{ section.id }} .wedding-card__step.is-active {
     opacity: 1;
-    visibility: visible;
     transform: translateY(0);
-    pointer-events: auto;
   }
 
   #wedding-card-{{ section.id }} .wedding-card__eyebrow {
@@ -363,7 +403,7 @@
     padding: 8px 16px;
     border-radius: 999px;
     background: rgba(255, 215, 162, .1);
-    color: var(--accent);
+    color: #ffe4af;
     border: 1px solid rgba(255,255,255,.12);
     letter-spacing: .14em;
     text-transform: uppercase;
@@ -381,19 +421,22 @@
   #wedding-card-{{ section.id }} .wedding-card__title span { color: var(--accent); }
 
   #wedding-card-{{ section.id }} .wedding-card__message {
-    color: var(--text-soft);
+    color: #fff0f6;
     line-height: 1.8;
-    margin: 0 auto 14px;
+    margin: 0 auto;
     max-width: 34ch;
+    font-size: 1.02rem;
   }
 
   #wedding-card-{{ section.id }} .wedding-card__message p { margin: 0; }
 
   #wedding-card-{{ section.id }} .wedding-card__date {
-    margin: 12px 0 18px;
-    font-size: .92rem;
+    margin: 0;
+    font-size: .98rem;
     letter-spacing: .12em;
     text-transform: uppercase;
+    color: #ffe4af;
+    font-weight: 700;
   }
 
   #wedding-card-{{ section.id }} .wedding-card__actions {
@@ -434,9 +477,9 @@
   }
 
   #wedding-card-{{ section.id }} .wedding-card__button--ghost {
-    color: var(--text-main);
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.12);
+    color: #fff6f9;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.32);
   }
 
   #wedding-card-{{ section.id }} .wedding-card__button--hidden,
@@ -475,6 +518,8 @@
 
   @media screen and (max-width: 749px) {
     #wedding-card-{{ section.id }} .wedding-card__scene { align-items: flex-start; padding-top: 40px; padding-bottom: 160px; }
+    #wedding-card-{{ section.id }} .wedding-card__sequence { inset: 14% 6% auto; }
+    #wedding-card-{{ section.id }} .wedding-card__sequence-text { font-size: clamp(1.45rem, 8vw, 2.6rem); }
     #wedding-card-{{ section.id }} .wedding-card__content { width: min(94vw, 480px); padding: 24px 18px; }
     #wedding-card-{{ section.id }} .wedding-card__actions { flex-direction: column; }
     #wedding-card-{{ section.id }} .wedding-card__button { width: 100%; }
@@ -493,6 +538,9 @@
     const openButton = root.querySelector('[data-open-invitation]');
     const replayButton = root.querySelector('[data-replay]');
     const petalsHost = root.querySelector('[data-petals]');
+    const sequenceEl = root.querySelector('[data-sequence]');
+    const sequenceTextEl = root.querySelector('[data-sequence-text]');
+    const contentEl = root.querySelector('[data-content]');
     const namesEl = root.querySelector('[data-names]');
     const dateEl = root.querySelector('[data-date]');
     const messageEl = root.querySelector('[data-message]');
@@ -505,7 +553,11 @@
     const stepTimers = [];
     let petalInterval;
     const curtainOpenDuration = 1800;
-    const stepDuration = 2200;
+    const sequenceDelays = {
+      namesPause: 1000,
+      datePause: 1000,
+      messagePause: 3000
+    };
 
     function decodeMessage(value) {
       if (!value) return '';
@@ -593,9 +645,18 @@
       return stepEls.filter((step) => !step.hasAttribute('data-disabled'));
     }
 
-    function showStep(enabledSteps, index) {
-      enabledSteps.forEach((step) => step.classList.remove('is-active'));
-      enabledSteps[index]?.classList.add('is-active');
+   function revealStep(step) {
+      if (!step) return;
+      step.classList.add('is-visible');
+    }
+
+    function showFinalCard(enabledSteps) {
+      enabledSteps.forEach((step) => {
+        revealStep(step);
+        step.classList.add('is-active');
+      });
+      contentEl?.classList.add('is-ready');
+      sequenceEl?.classList.add('is-hidden');
     }
 
     function runStepSequence() {
@@ -603,13 +664,49 @@
       const enabledSteps = getEnabledSteps();
       if (!enabledSteps.length) return;
 
-      showStep(enabledSteps, 0);
-      enabledSteps.slice(1).forEach((_, index) => {
+      stepEls.forEach((step) => step.classList.remove('is-visible', 'is-active'));
+      contentEl?.classList.remove('is-ready');
+      sequenceEl?.classList.remove('is-hidden');
+      const namesStep = enabledSteps.find((step) => step.dataset.step === 'names');
+      const dateStep = enabledSteps.find((step) => step.dataset.step === 'date');
+      const messageStep = enabledSteps.find((step) => step.dataset.step === 'message');
+      const namesText = namesEl?.textContent?.trim() || '';
+      const dateText = dateEl?.textContent?.trim() || '';
+      const messageText = messageEl?.textContent?.trim() || '';
+      const sequenceQueue = [
+        { text: namesText, pause: sequenceDelays.namesPause, step: namesStep },
+        { text: dateText, pause: sequenceDelays.datePause, step: dateStep },
+        { text: messageText, pause: sequenceDelays.messagePause, step: messageStep }
+      ].filter((item) => item.text && item.step);
+
+      if (!sequenceQueue.length) {
+        showFinalCard(enabledSteps);
+        return;
+      }
+
+      if (sequenceTextEl) sequenceTextEl.textContent = sequenceQueue[0].text;
+      let elapsed = 0;
+      sequenceQueue.forEach((item, index) => {
+        if (index === 0) {
+          revealStep(item.step);
+          item.step.classList.add('is-active');
+          elapsed += item.pause;
+          return;
+        }
+
         const timer = window.setTimeout(() => {
-          showStep(enabledSteps, index + 1);
-        }, (index + 1) * stepDuration);
+          if (sequenceTextEl) sequenceTextEl.textContent = item.text;
+          revealStep(item.step);
+          item.step.classList.add('is-active');
+        }, elapsed);
         stepTimers.push(timer);
+        elapsed += item.pause;
       });
+
+      const finalTimer = window.setTimeout(() => {
+        showFinalCard(enabledSteps);
+      }, elapsed);
+      stepTimers.push(finalTimer);
     }
 
     function openInvitation() {
